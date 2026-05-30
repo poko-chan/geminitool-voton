@@ -1,0 +1,32 @@
+// マウスストーカー的な背景エフェクト
+document.addEventListener('mousemove', (e) => {
+    const x = e.clientX / window.innerWidth;
+    const y = e.clientY / window.innerHeight;
+    
+    const bg = document.querySelector('.background-overlay');
+    bg.style.background = `radial-gradient(circle at ${x * 100}% ${y * 100}%, #1a1a2e 0%, #050505 100%)`;
+});
+
+// カードのフェードインアニメーション
+const cards = document.querySelectorAll('.tool-card');
+const observerOptions = {
+    threshold: 0.1
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, index) => {
+        if (entry.isIntersecting) {
+            setTimeout(() => {
+                entry.target.style.opacity = "1";
+                entry.target.style.transform = "translateY(0)";
+            }, index * 150);
+        }
+    });
+}, observerOptions);
+
+cards.forEach(card => {
+    card.style.opacity = "0";
+    card.style.transform = "translateY(30px)";
+    card.style.transition = "all 0.6s ease-out";
+    observer.observe(card);
+});
