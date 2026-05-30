@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News RSS Directory - 主要ニュースサイトRSSリンク集</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&family=Noto+Sans+JP:wght=300;400;500;700&display=swap');
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
+
+    <!-- Header -->
+    <header class="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-orange-500 text-white rounded-lg shadow-sm">
+                    <i data-lucide="rss" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">RSS Directory</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">主要ニュースサイトのRSSフィード一覧</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <!-- User ID Badge -->
+                <div id="user-badge" class="hidden md:flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="max-w-[120px] truncate" id="user-id-text">Connecting...</span>
+                </div>
+
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors focus:outline-none" aria-label="テーマ切り替え">
+                    <span id="theme-icon-container"></span>
+                </button>
+                <button id="opml-export-btn" class="flex items-center space-x-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition shadow-sm">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>すべての公式をOPML書き出し</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        
+        <!-- Intro & Search Section -->
+        <div class="mb-8">
+            <div class="bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl p-6 md:p-8 shadow-md mb-6 relative overflow-hidden">
+                <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10 pointer-events-none">
+                    <i data-lucide="rss" class="w-72 h-72"></i>
+                </div>
+                <div class="max-w-2xl relative z-10">
+                    <span class="inline-block px-2.5 py-1 bg-white/20 text-white text-xs font-semibold rounded-full mb-3">リアルタイムクラウド共有対応</span>
+                    <h2 class="text-2xl md:text-3xl font-bold mb-2">好みのニュースをRSSでスマートに購読</h2>
+                    <p class="text-sm md:text-base text-orange-50/90 leading-relaxed mb-4">
+                        公式プリセットやお気に入りのプライベートフィードを管理。さらに「全体に共有する」機能を使うと、他のユーザーとRSSソースをオンラインで瞬時に共有・お互いに閲覧できます。
+                    </p>
+                </div>
+            </div>
+
+            <!-- Custom Feed Adder Form (Collapsible) -->
+            <div class="mb-8 border border-orange-200 dark:border-orange-950/40 bg-orange-50/20 dark:bg-orange-950/5 rounded-2xl p-6">
+                <button id="toggle-form-btn" class="flex items-center justify-between w-full text-left focus:outline-none">
+                    <div class="flex items-center space-x-2.5">
+                        <span class="p-1.5 bg-orange-500 text-white rounded-lg">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                        </span>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">マイRSSフィードを追加・投稿</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">自分だけの非公開メモとして保存するか、みんなにクラウド共有できます</p>
+                        </div>
+                    </div>
+                    <i id="form-chevron" data-lucide="chevron-down" class="w-5 h-5 text-slate-500 transition-transform duration-200"></i>
+                </button>
+
+                <div id="add-feed-form-container" class="hidden mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+                    <form id="add-feed-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">RSSのタイトル <span class="text-rose-500">*</span></label>
+                                <input type="text" id="custom-name" required placeholder="例: 個人ブログの技術記事" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">RSSフィードURL <span class="text-rose-500">*</span></label>
+                                <input type="url" id="custom-url" required placeholder="例: https://example.com/feed" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">ジャンル/カテゴリ <span class="text-rose-500">*</span></label>
+                                <select id="custom-category" required class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                                    <option value="general">主要・一般</option>
+                                    <option value="it">IT・テクノロジー</option>
+                                    <option value="business">ビジネス・経済</option>
+                                    <option value="international">国際・海外</option>
+                                    <option value="entertainment">エンタメ・ライフ</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">運営会社/配信元 <span class="text-rose-500">*</span></label>
+                                <input type="text" id="custom-publisher" required placeholder="例: 個人運営、〇〇ニュース等" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">サイトの詳細説明</label>
+                                <input type="text" id="custom-description" placeholder="例: 主にReactやWebデザインに関する記事が更新されます" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">自分のメモ・コメント</label>
+                            <textarea id="custom-comment" rows="2" placeholder="例: 毎日午前9時頃にチェック。非常に参考になる情報源。" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"></textarea>
+                        </div>
+
+                        <!-- Visibility Switch (Public vs Private) -->
+                        <div class="p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="p-1.5 bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 rounded-lg">
+                                    <i data-lucide="share-2" class="w-5 h-5"></i>
+                                </span>
+                                <div>
+                                    <h4 class="text-sm font-bold">全体に共有する（公開）</h4>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">チェックを入れると、クラウド経由で他の人もこのRSSフィードを利用できるようになります。</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer select-none">
+                                <input type="checkbox" id="custom-share" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" id="reset-form-btn" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium transition">クリア</button>
+                            <button type="submit" class="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition">追加する</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+                <!-- Search Input -->
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                        <i data-lucide="search" class="w-5 h-5"></i>
+                    </span>
+                    <input type="text" id="search-input" placeholder="ニュースサイト、カテゴリ、媒体名で検索..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all shadow-sm">
+                </div>
+
+                <!-- Category Quick Filter -->
+                <div class="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0 custom-scrollbar whitespace-nowrap">
+                    <button class="category-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-orange-100 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400" data-category="all">
+                        すべて
+                    </button>
+                    <button class="category-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800" data-category="general">
+                        主要・一般
+                    </button>
+                    <button class="category-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850" data-category="it">
+                        IT・テクノロジー
+                    </button>
+                    <button class="category-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850" data-category="business">
+                        ビジネス・経済
+                    </button>
+                    <button class="category-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850" data-category="international">
+                        国際・海外
+                    </button>
+                    <button class="category-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850" data-category="entertainment">
+                        エンタメ・ライフ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selection Quick Actions -->
+        <div id="selection-bar" class="hidden mb-6 bg-slate-100 dark:bg-slate-900 p-4 rounded-xl flex-wrap items-center justify-between gap-3 border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center space-x-2">
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-300">
+                    選択中: <span id="selected-count" class="font-bold text-orange-600 dark:text-orange-400">0</span> 件
+                </span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="select-all-btn" class="text-xs px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-50 dark:hover:bg-slate-700 font-medium transition">
+                    表示中をすべて選択
+                </button>
+                <button id="clear-selection-btn" class="text-xs px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-50 dark:hover:bg-slate-700 font-medium transition">
+                    選択クリア
+                </button>
+                <button id="export-selected-btn" class="text-xs px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-medium transition flex items-center space-x-1">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>選択分をOPML出力</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= SHARED RSS SECTION ================= -->
+        <div id="shared-section" class="mb-12">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-6">
+                <div class="flex items-center space-x-2.5">
+                    <span class="p-1.5 bg-emerald-500 text-white rounded-lg">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                    </span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">みんなのシェアRSSフィード (クラウド共有)</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">全ユーザーが登録した共有RSSリンク（リアルタイム同期中）</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="shared-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Shared Cards insertion here -->
+            </div>
+            
+            <!-- Empty Shared RSS Message -->
+            <div id="shared-empty-message" class="hidden text-center py-10 bg-slate-100/50 dark:bg-slate-900/30 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                <i data-lucide="globe" class="w-10 h-10 text-slate-400 mx-auto mb-2"></i>
+                <h4 class="text-sm font-semibold text-slate-600 dark:text-slate-400">共有中のカスタムRSSはありません</h4>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">上の投稿フォームから「全体に共有する」をONにして投稿してみましょう！</p>
+            </div>
+        </div>
+
+        <!-- ================= CUSTOM PRIVATE RSS SECTION ================= -->
+        <div id="custom-section" class="mb-12">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-6">
+                <div class="flex items-center space-x-2.5">
+                    <span class="p-1.5 bg-rose-500 text-white rounded-lg">
+                        <i data-lucide="user" class="w-5 h-5"></i>
+                    </span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">マイ・カスタムRSSフィード (非公開)</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">自分だけのローカルに保存されている秘密のRSS</p>
+                    </div>
+                </div>
+                <button id="custom-opml-export-btn" class="text-xs flex items-center space-x-1 px-3 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium transition">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>マイRSSをOPML書き出し</span>
+                </button>
+            </div>
+            
+            <div id="custom-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Custom Cards insertion here -->
+            </div>
+            
+            <!-- Empty Custom RSS Message -->
+            <div id="custom-empty-message" class="hidden text-center py-10 bg-slate-100/50 dark:bg-slate-900/30 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                <i data-lucide="folder-open" class="w-10 h-10 text-slate-400 mx-auto mb-2"></i>
+                <h4 class="text-sm font-semibold text-slate-600 dark:text-slate-400">非公開のカスタムRSSはありません</h4>
+            </div>
+        </div>
+
+        <!-- ================= OFFICIAL RSS SECTION ================= -->
+        <div class="mb-4">
+            <div class="flex items-center space-x-2.5 border-b border-slate-200 dark:border-slate-800 pb-3 mb-6">
+                <span class="p-1.5 bg-blue-500 text-white rounded-lg">
+                    <i data-lucide="globe" class="w-5 h-5"></i>
+                </span>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">公式プリセットRSSフィード</h2>
+            </div>
+        </div>
+        
+        <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic Content insertion here -->
+        </div>
+
+        <!-- No Results -->
+        <div id="no-results" class="hidden text-center py-16">
+            <div class="inline-block p-4 bg-slate-100 dark:bg-slate-900 text-slate-400 rounded-full mb-4">
+                <i data-lucide="alert-circle" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-300">該当するRSSリンクが見つかりません</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">検索条件を変更するか、別のカテゴリをお試しください。</p>
+        </div>
+
+    </main>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-200">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl transform scale-95 transition-all duration-200">
+            <div class="flex items-center space-x-3 text-rose-500 mb-4">
+                <span class="p-2 bg-rose-50 dark:bg-rose-950/50 rounded-lg">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </span>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">RSSフィードの削除</h3>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+                本当にこのRSSフィードを削除しますか？<br>
+                <span class="text-xs text-rose-500 font-medium">※公開フィードを削除した場合、他の人の画面からも消去されます。この操作は取り消せません。</span>
+            </p>
+            <div class="flex justify-end space-x-3">
+                <button id="modal-cancel-btn" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium transition">キャンセル</button>
+                <button id="modal-confirm-btn" class="px-5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-sm font-medium transition">完全に削除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 mt-16 py-8">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+                RSSフィードの配信状況やURLは、配信元の公式サイトの仕様変更により予告なく変更される場合があります。
+            </p>
+            <p class="text-xs text-slate-400 dark:text-slate-600 mt-3">
+                &copy; 2026 RSS Directory. All Rights Reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 bg-slate-900 dark:bg-slate-800 border dark:border-slate-700 text-white px-4 py-3 rounded-xl shadow-lg flex items-center space-x-2.5 transition-all duration-300 pointer-events-none">
+        <span class="p-1 bg-emerald-500 rounded text-white flex items-center justify-center">
+            <i data-lucide="check" class="w-4 h-4"></i>
+        </span>
+        <span id="toast-message" class="text-sm font-medium">コピーしました</span>
+    </div>
+
+    <!-- Firebase Script with module support -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Official RSS Directory Data
+        const rssData = [
+            // General News
+            {
+                id: "yahoo-topics",
+                name: "Yahoo!ニュース (トピックス)",
+                category: "general",
+                url: "https://news.yahoo.co.jp/rss/topics/top-picks.xml",
+                description: "Yahoo!ニュースがセレクトした主要なトップトピックス一覧。",
+                publisher: "Yahoo! JAPAN",
+                isPopular: true
+            },
+            {
+                id: "yahoo-domestic",
+                name: "Yahoo!ニュース (国内)",
+                category: "general",
+                url: "https://news.yahoo.co.jp/rss/topics/domestic.xml",
+                description: "Yahoo!ニュースの日本国内に関する最新トピックス。",
+                publisher: "Yahoo! JAPAN"
+            },
+            {
+                id: "nhk-news",
+                name: "NHKニュース (主要ニュース)",
+                category: "general",
+                url: "https://www.nhk.or.jp/rss/news/cat0.xml",
+                description: "NHKが提供する最新の信頼性の高いニュース速報。",
+                publisher: "NHK (日本放送協会)",
+                isPopular: true
+            },
+            {
+                id: "nhk-social",
+                name: "NHKニュース (社会)",
+                category: "general",
+                url: "https://www.nhk.or.jp/rss/news/cat1.xml",
+                description: "NHKの社会・事件・災害などに関するニュースフィード。",
+                publisher: "NHK (日本放送協会)"
+            },
+            {
+                id: "kyodo-news",
+                name: "共同通信 (主要ニュース)",
+                category: "general",
+                url: "https://www.kyodo.co.jp/feed/",
+                description: "国内外のニュースを迅速にカバーする共同通信の公式フィード。",
+                publisher: "共同通信社"
+            },
+            {
+                id: "jiji-news",
+                name: "時事ドットコム (新着総合)",
+                category: "general",
+                url: "https://www.jiji.com/jc/rss?g=news",
+                description: "国内外の政治・経済・社会ニュースを迅速に提供する時事通信 ofの速報。",
+                publisher: "時事通信社"
+            },
+            {
+                id: "asahi-news",
+                name: "朝日新聞デジタル (最新ニュース)",
+                category: "general",
+                url: "https://www.asahi.com/rss/asahi/news.rdf",
+                description: "朝日新聞がお届けする、政治・社会・ビジネスなどの主要ニュース一覧。",
+                publisher: "朝日新聞社"
+            },
+            
+            // IT & Technology
+            {
+                id: "itmedia-top",
+                name: "ITmedia 総合記事",
+                category: "it",
+                url: "https://rss.itmedia.co.jp/rss/2.0/itmedia_all.xml",
+                description: "ITmediaの最新テクノロジー、モバイル、Web業界動向を網羅した総合フィード。",
+                publisher: "ITmedia",
+                isPopular: true
+            },
+            {
+                id: "itmedia-news",
+                name: "ITmedia NEWS",
+                category: "it",
+                url: "https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml",
+                description: "IT業界のビジネスや技術動向をスピーディーに伝える速報ニュース。",
+                publisher: "ITmedia"
+            },
+            {
+                id: "cnet-japan",
+                name: "CNET Japan 最新情報",
+                category: "it",
+                url: "https://japan.cnet.com/rss/index.rdf",
+                description: "世界的なテクノロジーメディアの日本版。最新のガジェットやテックビジネス情報。",
+                publisher: "朝日インタラクティブ",
+                isPopular: true
+            },
+            {
+                id: "zdnet-japan",
+                name: "ZDNet Japan 総合",
+                category: "it",
+                url: "https://japan.zdnet.com/rss/index.rdf",
+                description: "CIOやITマネージャーを対象にした、企業向けIT戦略・ソリューション情報。",
+                publisher: "朝日インタラクティブ"
+            },
+            {
+                id: "gizmodo-japan",
+                name: "GIZMODO JAPAN",
+                category: "it",
+                url: "https://www.gizmodo.jp/index.xml",
+                description: "最新のデジタルガジェットやテクノロジー、サイエンス情報を発信する人気ブログメディア。",
+                publisher: "メディアジーン",
+                isPopular: true
+            },
+            {
+                id: "gigazine",
+                name: "GIGAZINE",
+                category: "it",
+                url: "https://gigazine.net/news/rss_2.0/",
+                description: "ガジェット、ソフト、科学、ゲーム、おもしろネタまで、圧倒的な情報量を誇る老舗ニュースサイト。",
+                publisher: "GIGAZINE"
+            },
+            {
+                id: "publickey",
+                name: "Publickey",
+                category: "it",
+                url: "https://www.publickey1.jp/atom.xml",
+                description: "エンタープライズIT、クラウド、Web開発トレンドを専門的に追う、エンジニア必須のブログメディア。",
+                publisher: "Publickey"
+            },
+            {
+                id: "famitsu",
+                name: "ファミ通.com",
+                category: "it",
+                url: "https://www.famitsu.com/rss/index.xml",
+                description: "最新のゲーム情報、新作レビュー、声優・アニメニュースを提供する日本最大級のゲームメディア。",
+                publisher: "KADOKAWA Game Linkage"
+            },
+
+            // Business & Economics
+            {
+                id: "reuters-biz",
+                name: "ロイター・ビジネスニュース",
+                category: "business",
+                url: "https://services.newsportals.reuters.com/rss/feed/japanBusinessNews",
+                description: "世界最大級の通信社が提供する、客観的で迅速な経済・ビジネス速報。",
+                publisher: "Reuters",
+                isPopular: true
+            },
+            {
+                id: "reuters-market",
+                name: "ロイター・マーケットニュース",
+                category: "business",
+                url: "https://services.newsportals.reuters.com/rss/feed/japanMarketNews",
+                description: "為替、株式、債券市場など、投資に欠かせない最新の金融市場情報。",
+                publisher: "Reuters"
+            },
+            {
+                id: "toyokeizai",
+                name: "東洋経済オンライン (総合)",
+                category: "business",
+                url: "https://toyokeizai.net/list/feed/rss",
+                description: "ビジネス、経済、キャリア、教育、鉄道などビジネスマン必須の多様な情報を配信。",
+                publisher: "東洋経済新報社",
+                isPopular: true
+            },
+            {
+                id: "diamond",
+                name: "ダイヤモンド・オンライン (最新)",
+                category: "business",
+                url: "https://diamond.jp/list/feed/rss",
+                description: "深掘りされた経済・企業分析記事、ビジネススキル、コラムなどを提供。",
+                publisher: "ダイヤモンド社"
+            },
+
+            // International
+            {
+                id: "reuters-world",
+                name: "ロイター・世界ニュース",
+                category: "international",
+                url: "https://services.newsportals.reuters.com/rss/feed/japanWorldNews",
+                description: "世界各地の国際情勢、政治動向、特派員による現地取材記事。",
+                publisher: "Reuters",
+                isPopular: true
+            },
+            {
+                id: "bbc-japan",
+                name: "BBCニュース (日本向け)",
+                category: "international",
+                url: "https://www.bbc.com/japanese/index.xml",
+                description: "英国放送協会(BBC)による、世界的視点の客観的で掘り下げられたニュース情報。",
+                publisher: "BBC (英国放送協会)"
+            },
+
+            // Entertainment / Lifestyle / Sports
+            {
+                id: "oricon-news",
+                name: "ORICON NEWS",
+                category: "entertainment",
+                url: "https://www.oricon.co.jp/rss/news.xml",
+                description: "音楽、映画、ドラマ、タレント情報などエンタメ業界の最新動向をカバー。",
+                publisher: "オリコン"
+            },
+            {
+                id: "natalie-all",
+                name: "音楽ナタリー (最新)",
+                category: "entertainment",
+                url: "https://natalie.mu/music/feed/news",
+                description: "音楽、ライブ、アーティスト情報、リリース速報などをどこよりも速くお届けするメディア。",
+                publisher: "ナターシャ"
+            }
+        ];
+
+        // Global State & Database Setup
+        let currentCategory = "all";
+        let searchQuery = "";
+        let selectedFeeds = new Set();
+        let customFeeds = []; // Local private feeds
+        let sharedFeeds = []; // Remote Firebase database feeds
+
+        // Firebase References & Authentication
+        let db = null;
+        let auth = null;
+        let userId = crypto.randomUUID(); // Temporary Local UUID until Auth completes
+        let isFirebaseActive = false;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // DOM Elements
+        const cardsContainer = document.getElementById("cards-container");
+        const customCardsContainer = document.getElementById("custom-cards-container");
+        const sharedCardsContainer = document.getElementById("shared-cards-container");
+        const customEmptyMessage = document.getElementById("custom-empty-message");
+        const sharedEmptyMessage = document.getElementById("shared-empty-message");
+        const searchInput = document.getElementById("search-input");
+        const categoryBtns = document.querySelectorAll(".category-filter-btn");
+        const noResults = document.getElementById("no-results");
+        const selectionBar = document.getElementById("selection-bar");
+        const selectedCount = document.getElementById("selected-count");
+        const selectAllBtn = document.getElementById("select-all-btn");
+        const clearSelectionBtn = document.getElementById("clear-selection-btn");
+        const exportSelectedBtn = document.getElementById("export-selected-btn");
+        const opmlExportBtn = document.getElementById("opml-export-btn");
+        const customOpmlExportBtn = document.getElementById("custom-opml-export-btn");
+        const toast = document.getElementById("toast");
+        const toastMessage = document.getElementById("toast-message");
+        
+        // Confirmation Modal Elements
+        const confirmModal = document.getElementById("confirm-modal");
+        const modalCancelBtn = document.getElementById("modal-cancel-btn");
+        const modalConfirmBtn = document.getElementById("modal-confirm-btn");
+        let deleteTarget = null; // Stores target for removal {type: 'custom'|'shared', id: string}
+
+        // Form Elements
+        const toggleFormBtn = document.getElementById("toggle-form-btn");
+        const addFeedFormContainer = document.getElementById("add-feed-form-container");
+        const addFeedForm = document.getElementById("add-feed-form");
+        const formChevron = document.getElementById("form-chevron");
+        const resetFormBtn = document.getElementById("reset-form-btn");
+
+        // Theme Elements
+        const themeToggle = document.getElementById("theme-toggle");
+        const themeIconContainer = document.getElementById("theme-icon-container");
+
+        // Initialize Firebase
+        async function setupFirebase() {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                try {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    // Sign in securely (Anonymous default)
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+
+                    onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            document.getElementById("user-badge").classList.remove("hidden");
+                            document.getElementById("user-id-text").textContent = `ID: ${user.uid.substring(0, 8)}...`;
+                            isFirebaseActive = true;
+                            listenToSharedFeeds();
+                        }
+                    });
+                } catch (err) {
+                    console.error("Firebase setup failed, falling back to local memory:", err);
+                }
+            } else {
+                console.log("No Firebase configurations. Standalone local mode activated.");
+            }
+        }
+
+        // Listen to Shared Cloud Feeds
+        function listenToSharedFeeds() {
+            if (!isFirebaseActive || !db) return;
+
+            // Strict Rules - Fetch shared collection
+            const sharedColRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_feeds');
+            
+            // Real-time synchronization
+            onSnapshot(sharedColRef, (snapshot) => {
+                sharedFeeds = [];
+                snapshot.forEach(doc => {
+                    sharedFeeds.push({
+                        docId: doc.id,
+                        ...doc.data()
+                    });
+                });
+                renderAll();
+            }, (error) => {
+                console.error("Firestore synchronizing error: ", error);
+            });
+        }
+
+        // Load Custom Feeds from LocalStorage
+        function loadCustomFeeds() {
+            const stored = localStorage.getItem("my-custom-rss-feeds");
+            if (stored) {
+                try {
+                    customFeeds = JSON.parse(stored);
+                } catch(e) {
+                    customFeeds = [];
+                }
+            }
+        }
+
+        // Save Custom Feeds to LocalStorage
+        function saveCustomFeeds() {
+            localStorage.setItem("my-custom-rss-feeds", JSON.stringify(customFeeds));
+        }
+
+        // Theme Setup & Dark Mode Toggle
+        function isDarkModeActive() {
+            return document.documentElement.classList.contains('dark');
+        }
+
+        function updateThemeUI(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+                themeIconContainer.innerHTML = `<i data-lucide="sun" class="w-5 h-5 text-amber-400 fill-amber-400 animate-pulse"></i>`;
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+                themeIconContainer.innerHTML = `<i data-lucide="moon" class="w-5 h-5 text-slate-600"></i>`;
+            }
+            lucide.createIcons();
+        }
+
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedTheme = localStorage.getItem('color-theme');
+        const initialDarkState = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+        updateThemeUI(initialDarkState);
+
+        themeToggle.addEventListener('click', function() {
+            updateThemeUI(!isDarkModeActive());
+        });
+
+        // Initialize App
+        async function mainInit() {
+            loadCustomFeeds();
+            await setupFirebase();
+            renderAll();
+            setupEventListeners();
+            lucide.createIcons();
+        }
+
+        // Render both Official, Shared, and Private Custom Boards
+        function renderAll() {
+            renderSharedCards();
+            renderCustomCards();
+            renderCards();
+        }
+
+        // Render Shared Cloud Cards
+        function renderSharedCards() {
+            sharedCardsContainer.innerHTML = "";
+
+            const filteredShared = sharedFeeds.filter(item => {
+                const matchesCategory = currentCategory === "all" || item.category === currentCategory;
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      item.publisher.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                                      (item.comment && item.comment.toLowerCase().includes(searchQuery.toLowerCase()));
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filteredShared.length === 0) {
+                sharedEmptyMessage.classList.remove("hidden");
+                sharedCardsContainer.classList.add("hidden");
+                return;
+            }
+
+            sharedEmptyMessage.classList.add("hidden");
+            sharedCardsContainer.classList.remove("hidden");
+
+            filteredShared.forEach(item => {
+                const isChecked = selectedFeeds.has(item.id);
+                const isOwner = item.createdBy === userId;
+                const card = document.createElement("div");
+                card.className = `p-5 rounded-2xl border transition-all duration-200 flex flex-col justify-between hover:shadow-lg relative overflow-hidden ${
+                    isChecked 
+                        ? 'bg-orange-50/40 dark:bg-orange-950/20 border-orange-500 ring-2 ring-orange-500 dark:ring-orange-400' 
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                }`;
+                card.setAttribute('data-id', item.id);
+
+                card.innerHTML = `
+                    <div>
+                        <!-- Card Header -->
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-0.5 rounded text-xs font-semibold ${getCategoryBadgeClass(item.category)}">
+                                    ${getCategoryName(item.category)}
+                                </span>
+                                <span class="flex items-center text-xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded">
+                                    <i data-lucide="globe" class="w-3 h-3 mr-0.5"></i>シェア
+                                </span>
+                            </div>
+                            
+                            <div class="flex items-center space-x-2">
+                                <!-- Delete Button (Only visible if the current user is the owner) -->
+                                ${isOwner ? `
+                                    <button class="delete-shared-btn text-slate-400 hover:text-rose-500 p-1 rounded-lg transition" data-docid="${item.docId}" data-id="${item.id}" title="削除する">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                ` : ''}
+                                <input type="checkbox" class="feed-checkbox w-5 h-5 text-orange-500 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded focus:ring-orange-500 cursor-pointer" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
+                            </div>
+                        </div>
+                        
+                        <!-- Feed Title -->
+                        <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-1 leading-snug pr-6">
+                            ${item.name}
+                        </h3>
+                        
+                        <!-- Publisher & Author -->
+                        <div class="flex flex-col mb-3">
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                配信元: ${item.publisher}
+                            </span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500">
+                                投稿者ID: ${item.createdBy ? item.createdBy.substring(0, 10) + '...' : 'Guest'}
+                            </span>
+                        </div>
+
+                        <!-- Description -->
+                        ${item.description ? `
+                            <p class="text-xs text-slate-600 dark:text-slate-400 mb-4 line-clamp-2 leading-relaxed">
+                                ${item.description}
+                            </p>
+                        ` : ''}
+
+                        <!-- Comment / Note Box -->
+                        ${item.comment ? `
+                            <div class="mb-4 p-3 bg-slate-50 dark:bg-slate-950 border-l-4 border-emerald-400 rounded-r-lg">
+                                <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block uppercase tracking-wider mb-1">みんなへのコメント</span>
+                                <p class="text-xs text-slate-700 dark:text-slate-300 italic">
+                                    "${item.comment}"
+                                </p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                        <div class="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg overflow-hidden flex items-center justify-between">
+                            <span class="text-xs text-slate-500 dark:text-slate-400 truncate select-all mr-2" style="font-family: monospace;">
+                                ${item.url}
+                            </span>
+                        </div>
+                        <button class="copy-btn p-2 bg-slate-100 dark:bg-slate-800 hover:bg-orange-500 hover:text-white dark:hover:bg-orange-600 dark:hover:text-white text-slate-600 dark:text-slate-300 rounded-lg transition" data-url="${item.url}" title="RSSリンクをコピー">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+
+                sharedCardsContainer.appendChild(card);
+            });
+
+            setupSharedCardInteractions();
+            lucide.createIcons();
+        }
+
+        // Render Custom RSS Cards (Separated Section)
+        function renderCustomCards() {
+            customCardsContainer.innerHTML = "";
+
+            const filteredCustom = customFeeds.filter(item => {
+                const matchesCategory = currentCategory === "all" || item.category === currentCategory;
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      item.publisher.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                                      (item.comment && item.comment.toLowerCase().includes(searchQuery.toLowerCase()));
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filteredCustom.length === 0) {
+                customEmptyMessage.classList.remove("hidden");
+                customCardsContainer.classList.add("hidden");
+                return;
+            }
+
+            customEmptyMessage.classList.add("hidden");
+            customCardsContainer.classList.remove("hidden");
+
+            filteredCustom.forEach(item => {
+                const isChecked = selectedFeeds.has(item.id);
+                const card = document.createElement("div");
+                card.className = `p-5 rounded-2xl border transition-all duration-200 flex flex-col justify-between hover:shadow-lg relative overflow-hidden ${
+                    isChecked 
+                        ? 'bg-orange-50/40 dark:bg-orange-950/20 border-orange-500 ring-2 ring-orange-500 dark:ring-orange-400' 
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                }`;
+                card.setAttribute('data-id', item.id);
+
+                card.innerHTML = `
+                    <div>
+                        <!-- Card Header -->
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-0.5 rounded text-xs font-semibold ${getCategoryBadgeClass(item.category)}">
+                                    ${getCategoryName(item.category)}
+                                </span>
+                                <span class="flex items-center text-xs text-rose-600 dark:text-rose-400 font-semibold bg-rose-50 dark:bg-rose-950/50 px-1.5 py-0.5 rounded">
+                                    <i data-lucide="lock" class="w-3 h-3 mr-0.5"></i>非公開
+                                </span>
+                            </div>
+                            
+                            <div class="flex items-center space-x-2">
+                                <!-- Delete Button -->
+                                <button class="delete-custom-btn text-slate-400 hover:text-rose-500 p-1 rounded-lg transition" data-id="${item.id}" title="削除する">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                                <input type="checkbox" class="feed-checkbox w-5 h-5 text-orange-500 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded focus:ring-orange-500 cursor-pointer" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
+                            </div>
+                        </div>
+                        
+                        <!-- Feed Title -->
+                        <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-1 leading-snug pr-6">
+                            ${item.name}
+                        </h3>
+                        
+                        <!-- Publisher -->
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3 block">
+                            ${item.publisher}
+                        </span>
+
+                        <!-- Description -->
+                        ${item.description ? `
+                            <p class="text-xs text-slate-600 dark:text-slate-400 mb-4 line-clamp-2 leading-relaxed">
+                                ${item.description}
+                            </p>
+                        ` : ''}
+
+                        <!-- Comment / Note Box -->
+                        ${item.comment ? `
+                            <div class="mb-4 p-3 bg-slate-50 dark:bg-slate-950 border-l-4 border-orange-400 rounded-r-lg">
+                                <span class="text-[10px] font-bold text-orange-600 dark:text-orange-400 block uppercase tracking-wider mb-1">コメントメモ</span>
+                                <p class="text-xs text-slate-700 dark:text-slate-300 italic">
+                                    "${item.comment}"
+                                </p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                        <div class="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg overflow-hidden flex items-center justify-between">
+                            <span class="text-xs text-slate-500 dark:text-slate-400 truncate select-all mr-2" style="font-family: monospace;">
+                                ${item.url}
+                            </span>
+                        </div>
+                        <button class="copy-btn p-2 bg-slate-100 dark:bg-slate-800 hover:bg-orange-500 hover:text-white dark:hover:bg-orange-600 dark:hover:text-white text-slate-600 dark:text-slate-300 rounded-lg transition" data-url="${item.url}" title="RSSリンクをコピー">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+
+                customCardsContainer.appendChild(card);
+            });
+
+            setupCustomCardInteractions();
+            lucide.createIcons();
+        }
+
+        // Render Official Cards
+        function renderCards() {
+            const filtered = rssData.filter(item => {
+                const matchesCategory = currentCategory === "all" || item.category === currentCategory;
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      item.publisher.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      item.description.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+
+            cardsContainer.innerHTML = "";
+
+            // Check total visible cards
+            const totalVisible = filtered.length + customFeeds.filter(item => {
+                const matchesCategory = currentCategory === "all" || item.category === currentCategory;
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      item.publisher.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+                return matchesCategory && matchesSearch;
+            }).length + sharedFeeds.filter(item => {
+                const matchesCategory = currentCategory === "all" || item.category === currentCategory;
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      item.publisher.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+                return matchesCategory && matchesSearch;
+            }).length;
+
+            if (totalVisible === 0) {
+                noResults.classList.remove("hidden");
+                cardsContainer.classList.add("hidden");
+                return;
+            }
+
+            noResults.classList.add("hidden");
+            cardsContainer.classList.remove("hidden");
+
+            filtered.forEach(item => {
+                const isChecked = selectedFeeds.has(item.id);
+                const card = document.createElement("div");
+                card.className = `p-5 rounded-2xl border transition-all duration-200 flex flex-col justify-between hover:shadow-lg ${
+                    isChecked 
+                        ? 'bg-orange-50/40 dark:bg-orange-950/20 border-orange-500 ring-2 ring-orange-500 dark:ring-orange-400' 
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                }`;
+                card.setAttribute('data-id', item.id);
+
+                card.innerHTML = `
+                    <div>
+                        <!-- Card Header -->
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-0.5 rounded text-xs font-semibold ${getCategoryBadgeClass(item.category)}">
+                                    ${getCategoryName(item.category)}
+                                </span>
+                                ${item.isPopular ? `
+                                    <span class="flex items-center text-xs text-amber-600 dark:text-amber-400 font-semibold bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded">
+                                        <i data-lucide="zap" class="w-3 h-3 mr-0.5 fill-current"></i>人気
+                                    </span>
+                                ` : ''}
+                            </div>
+                            <input type="checkbox" class="feed-checkbox w-5 h-5 text-orange-500 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded focus:ring-orange-500 cursor-pointer" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
+                        </div>
+                        
+                        <!-- Feed Title -->
+                        <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-1 leading-snug">
+                            ${item.name}
+                        </h3>
+                        
+                        <!-- Publisher -->
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3 block">
+                            ${item.publisher}
+                        </span>
+
+                        <!-- Description -->
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-4 line-clamp-3 leading-relaxed">
+                            ${item.description}
+                        </p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                        <div class="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg overflow-hidden flex items-center justify-between">
+                            <span class="text-xs text-slate-500 dark:text-slate-400 truncate select-all mr-2" style="font-family: monospace;">
+                                ${item.url}
+                            </span>
+                        </div>
+                        <button class="copy-btn p-2 bg-slate-100 dark:bg-slate-800 hover:bg-orange-500 hover:text-white dark:hover:bg-orange-600 dark:hover:text-white text-slate-600 dark:text-slate-300 rounded-lg transition" data-url="${item.url}" title="RSSリンクをコピー">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+
+                cardsContainer.appendChild(card);
+            });
+
+            setupCardInteractions();
+            lucide.createIcons();
+        }
+
+        // Setup Card Specific Events for Official list
+        function setupCardInteractions() {
+            document.querySelectorAll("#cards-container .feed-checkbox").forEach(checkbox => {
+                checkbox.addEventListener("change", (e) => {
+                    const id = e.target.getAttribute("data-id");
+                    toggleFeedSelection(id, e.target.checked);
+                });
+            });
+
+            document.querySelectorAll("#cards-container .copy-btn").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const url = btn.getAttribute("data-url");
+                    copyToClipboard(url);
+                });
+            });
+        }
+
+        // Setup Card Specific Events for Shared list
+        function setupSharedCardInteractions() {
+            document.querySelectorAll("#shared-cards-container .feed-checkbox").forEach(checkbox => {
+                checkbox.addEventListener("change", (e) => {
+                    const id = e.target.getAttribute("data-id");
+                    toggleFeedSelection(id, e.target.checked);
+                });
+            });
+
+            document.querySelectorAll("#shared-cards-container .copy-btn").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const url = btn.getAttribute("data-url");
+                    copyToClipboard(url);
+                });
+            });
+
+            document.querySelectorAll(".delete-shared-btn").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute("data-id");
+                    const docId = btn.getAttribute("data-docid");
+                    openConfirmModal('shared', docId, id);
+                });
+            });
+        }
+
+        // Setup Card Specific Events for Custom list
+        function setupCustomCardInteractions() {
+            document.querySelectorAll("#custom-cards-container .feed-checkbox").forEach(checkbox => {
+                checkbox.addEventListener("change", (e) => {
+                    const id = e.target.getAttribute("data-id");
+                    toggleFeedSelection(id, e.target.checked);
+                });
+            });
+
+            document.querySelectorAll("#custom-cards-container .copy-btn").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const url = btn.getAttribute("data-url");
+                    copyToClipboard(url);
+                });
+            });
+
+            document.querySelectorAll(".delete-custom-btn").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute("data-id");
+                    openConfirmModal('custom', null, id);
+                });
+            });
+        }
+
+        // Toggle Single Feed Selection State
+        function toggleFeedSelection(id, isSelected) {
+            const card = document.querySelector(`div[data-id="${id}"]`);
+            if (isSelected) {
+                selectedFeeds.add(id);
+                if (card) {
+                    card.classList.remove('bg-white', 'dark:bg-slate-900', 'border-slate-200', 'dark:border-slate-800');
+                    card.classList.add('bg-orange-50/40', 'dark:bg-orange-950/20', 'border-orange-500', 'ring-2', 'ring-orange-500', 'dark:ring-orange-400');
+                }
+            } else {
+                selectedFeeds.delete(id);
+                if (card) {
+                    card.classList.remove('bg-orange-50/40', 'dark:bg-orange-950/20', 'border-orange-500', 'ring-2', 'ring-orange-500', 'dark:ring-orange-400');
+                    card.classList.add('bg-white', 'dark:bg-slate-900', 'border-slate-200', 'dark:border-slate-800');
+                }
+            }
+            updateSelectionBar();
+        }
+
+        // Update Bottom Selection Bar Visibility
+        function updateSelectionBar() {
+            const count = selectedFeeds.size;
+            if (count > 0) {
+                selectionBar.classList.remove("hidden");
+                selectionBar.classList.add("flex");
+                selectedCount.textContent = count;
+            } else {
+                selectionBar.classList.add("hidden");
+                selectionBar.classList.remove("flex");
+            }
+        }
+
+        // Confirmation Dialog Controllers
+        function openConfirmModal(type, docId, id) {
+            deleteTarget = { type, docId, id };
+            confirmModal.classList.remove("opacity-0", "pointer-events-none");
+            confirmModal.querySelector("div").classList.remove("scale-95");
+            confirmModal.querySelector("div").classList.add("scale-100");
+        }
+
+        function closeConfirmModal() {
+            deleteTarget = null;
+            confirmModal.classList.add("opacity-0", "pointer-events-none");
+            confirmModal.querySelector("div").classList.remove("scale-100");
+            confirmModal.querySelector("div").classList.add("scale-95");
+        }
+
+        async function executeDelete() {
+            if (!deleteTarget) return;
+
+            const { type, docId, id } = deleteTarget;
+
+            if (type === 'custom') {
+                // Delete Private Local
+                customFeeds = customFeeds.filter(feed => feed.id !== id);
+                selectedFeeds.delete(id);
+                saveCustomFeeds();
+                renderAll();
+                updateSelectionBar();
+                showToast("非公開のカスタムRSSを削除しました");
+            } else if (type === 'shared') {
+                // Delete Cloud Shared
+                if (isFirebaseActive && db && docId) {
+                    try {
+                        const targetDoc = doc(db, 'artifacts', appId, 'public', 'data', 'shared_feeds', docId);
+                        await deleteDoc(targetDoc);
+                        selectedFeeds.delete(id);
+                        showToast("共有RSSフィードを削除しました");
+                    } catch (err) {
+                        console.error("Cloud delete error:", err);
+                        showToast("削除中にエラーが発生しました。");
+                    }
+                } else {
+                    showToast("データベースへの接続がありません。");
+                }
+            }
+
+            closeConfirmModal();
+        }
+
+        // Copy Text using Legacy/Fallback for iFrame Safety
+        function copyToClipboard(text) {
+            const tempEl = document.createElement("textarea");
+            tempEl.value = text;
+            document.body.appendChild(tempEl);
+            tempEl.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast("リンクをクリップボードにコピーしました");
+                } else {
+                    showToast("コピーできませんでした。手動でコピーしてください");
+                }
+            } catch (err) {
+                showToast("エラーが発生しました");
+            }
+            document.body.removeChild(tempEl);
+        }
+
+        // Show Toast Dialog
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.remove("translate-y-20", "opacity-0");
+            toast.classList.add("translate-y-0", "opacity-100");
+
+            setTimeout(() => {
+                toast.classList.add("translate-y-20", "opacity-0");
+                toast.classList.remove("translate-y-0", "opacity-100");
+            }, 3000);
+        }
+
+        // Build & Download OPML File
+        function downloadOPML(feedsToExport, fileName = "rss-directory-export.opml") {
+            if (feedsToExport.length === 0) {
+                showToast("書き出すフィードがありません");
+                return;
+            }
+
+            const now = new Date().toUTCString();
+            let opmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+  <head>
+    <title>RSS Directory Subscriptions</title>
+    <dateCreated>${now}</dateCreated>
+  </head>
+  <body>
+    <outline text="Custom RSS Feed" title="Custom RSS Feed">`;
+
+            feedsToExport.forEach(feed => {
+                // Escape XML characters
+                const escapedName = feed.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                const escapedUrl = feed.url.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                opmlContent += `\n      <outline type="rss" text="${escapedName}" title="${escapedName}" xmlUrl="${escapedUrl}" htmlUrl="${escapedUrl}"/>`;
+            });
+
+            opmlContent += `
+    </outline>
+  </body>
+</opml>`;
+
+            const blob = new Blob([opmlContent], { type: "text/xml;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("OPMLファイルを書き出しました");
+        }
+
+        // Helper: Category Classes
+        function getCategoryBadgeClass(category) {
+            switch(category) {
+                case "general": return "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400";
+                case "it": return "bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400";
+                case "business": return "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400";
+                case "international": return "bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400";
+                case "entertainment": return "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400";
+                default: return "bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-400";
+            }
+        }
+
+        // Helper: Category Native Name
+        function getCategoryName(category) {
+            switch(category) {
+                case "general": return "主要・一般";
+                case "it": return "IT・ガジェット";
+                case "business": return "ビジネス・経済";
+                case "international": return "国際・海外";
+                case "entertainment": return "エンタメ・ライフ";
+                default: return "その他";
+            }
+        }
+
+        // General Events Setup
+        function setupEventListeners() {
+            // Search Input
+            searchInput.addEventListener("input", (e) => {
+                searchQuery = e.target.value;
+                renderAll();
+            });
+
+            // Category Tab Clicks
+            categoryBtns.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    categoryBtns.forEach(b => {
+                        b.className = "category-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850";
+                    });
+                    btn.className = "category-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-orange-100 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400";
+                    
+                    currentCategory = btn.getAttribute("data-category");
+                    renderAll();
+                });
+            });
+
+            // Toggle Custom Form Collapsible
+            toggleFormBtn.addEventListener("click", () => {
+                const isHidden = addFeedFormContainer.classList.contains("hidden");
+                if (isHidden) {
+                    addFeedFormContainer.classList.remove("hidden");
+                    formChevron.style.transform = "rotate(180deg)";
+                } else {
+                    addFeedFormContainer.classList.add("hidden");
+                    formChevron.style.transform = "rotate(0deg)";
+                }
+            });
+
+            // Modal Confirm/Cancel Events
+            modalCancelBtn.addEventListener("click", closeConfirmModal);
+            modalConfirmBtn.addEventListener("click", executeDelete);
+            confirmModal.addEventListener("click", (e) => {
+                if (e.target === confirmModal) closeConfirmModal();
+            });
+
+            // Form Reset
+            resetFormBtn.addEventListener("click", () => {
+                addFeedForm.reset();
+            });
+
+            // Form Submit (Add Feed)
+            addFeedForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const isShareChecked = document.getElementById("custom-share").checked;
+                const uniqueId = "custom-" + Date.now();
+
+                const feedDetails = {
+                    id: uniqueId,
+                    name: document.getElementById("custom-name").value,
+                    url: document.getElementById("custom-url").value,
+                    category: document.getElementById("custom-category").value,
+                    publisher: document.getElementById("custom-publisher").value,
+                    description: document.getElementById("custom-description").value || "",
+                    comment: document.getElementById("custom-comment").value || "",
+                    createdBy: userId,
+                    createdAt: Date.now()
+                };
+
+                if (isShareChecked) {
+                    // Save to Cloud Public Shared
+                    if (isFirebaseActive && db) {
+                        try {
+                            const publicColRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_feeds');
+                            await addDoc(publicColRef, feedDetails);
+                            showToast("RSSをみんなに共有（公開投稿）しました！");
+                        } catch (err) {
+                            console.error("Cloud publish error:", err);
+                            showToast("共有保存中にエラーが発生しました。");
+                        }
+                    } else {
+                        showToast("クラウドデータベースがアクティブではありません。");
+                        return;
+                    }
+                } else {
+                    // Save to Local Private
+                    customFeeds.unshift(feedDetails);
+                    saveCustomFeeds();
+                    showToast("マイRSS（非公開）を登録しました！");
+                }
+
+                // Reset form & notify
+                addFeedForm.reset();
+                renderAll();
+            });
+
+            // Select All Visible
+            selectAllBtn.addEventListener("click", () => {
+                const visibleCheckboxes = document.querySelectorAll(".feed-checkbox");
+                visibleCheckboxes.forEach(cb => {
+                    cb.checked = true;
+                    toggleFeedSelection(cb.getAttribute("data-id"), true);
+                });
+                renderAll();
+            });
+
+            // Clear Selection
+            clearSelectionBtn.addEventListener("click", () => {
+                selectedFeeds.clear();
+                updateSelectionBar();
+                renderAll();
+            });
+
+            // Export Selected Button
+            exportSelectedBtn.addEventListener("click", () => {
+                const combined = [...rssData, ...customFeeds, ...sharedFeeds];
+                const feedsToExport = combined.filter(item => selectedFeeds.has(item.id));
+                downloadOPML(feedsToExport, "selected-rss-export.opml");
+            });
+
+            // Export All Official Button
+            opmlExportBtn.addEventListener("click", () => {
+                downloadOPML(rssData, "official-rss-directory.opml");
+            });
+
+            // Export All Custom Private Button
+            customOpmlExportBtn.addEventListener("click", () => {
+                downloadOPML(customFeeds, "my-custom-rss-directory.opml");
+            });
+        }
+
+        // DOM Ready Load
+        window.addEventListener("DOMContentLoaded", mainInit);
+    </script>
+</body>
+</html>
