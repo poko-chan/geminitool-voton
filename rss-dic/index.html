@@ -175,7 +175,7 @@
                     <button class="category-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-orange-100 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400" data-category="all">
                         すべて
                     </button>
-                    <button class="category-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800" data-category="general">
+                    <button class="category-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850" data-category="general">
                         主要・一般
                     </button>
                     <button class="category-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850" data-category="it">
@@ -391,7 +391,7 @@
                 name: "時事ドットコム (新着総合)",
                 category: "general",
                 url: "https://www.jiji.com/jc/rss?g=news",
-                description: "国内外の政治・経済・社会ニュースを迅速に提供する時事通信 ofの速報。",
+                description: "国内外の政治・経済・社会ニュースを迅速に提供する時事通信の速報。",
                 publisher: "時事通信社"
             },
             {
@@ -468,7 +468,7 @@
                 name: "ファミ通.com",
                 category: "it",
                 url: "https://www.famitsu.com/rss/index.xml",
-                description: "最新のゲーム情報、新作レビュー、声優・アニメニュースを提供する日本最大級のゲームメディア。",
+                description: "最新のゲーム情報、新作レビュー、声優・アニメニュースを提供する日本最大級 ofのゲームメディア。",
                 publisher: "KADOKAWA Game Linkage"
             },
 
@@ -558,7 +558,11 @@
         let auth = null;
         let userId = crypto.randomUUID(); // Temporary Local UUID until Auth completes
         let isFirebaseActive = false;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // 【修正ポイント】環境が提供する変数 ( __app_id ) が存在する場合はそれを使用。
+        // これにより、Canvasプレビュー上では自動で安全なアプリIDが指定され、エラーを回避します。
+        // 本番環境（__app_idが未定義）に貼り付けたときは、自動で指定の 'rss-directory-app' にフォールバックします。
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'rss-directory-app';
 
         // DOM Elements
         const cardsContainer = document.getElementById("cards-container");
@@ -598,45 +602,56 @@
 
         // Initialize Firebase
         async function setupFirebase() {
+            let firebaseConfig;
             if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                try {
-                    const firebaseConfig = JSON.parse(__firebase_config);
-                    const app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-
-                    // Sign in securely (Anonymous default)
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-
-                    onAuthStateChanged(auth, (user) => {
-                        if (user) {
-                            userId = user.uid;
-                            document.getElementById("user-badge").classList.remove("hidden");
-                            document.getElementById("user-id-text").textContent = `ID: ${user.uid.substring(0, 8)}...`;
-                            isFirebaseActive = true;
-                            listenToSharedFeeds();
-                        }
-                    });
-                } catch (err) {
-                    console.error("Firebase setup failed, falling back to local memory:", err);
-                }
+                firebaseConfig = JSON.parse(__firebase_config);
             } else {
-                console.log("No Firebase configurations. Standalone local mode activated.");
+                firebaseConfig = {
+                    apiKey: "AIzaSyCoQq104REp7uUvOKhUPP3M-EfKaY4-X5k",
+                    authDomain: "rss-dic.firebaseapp.com",
+                    databaseURL: "https://rss-dic-default-rtdb.asia-southeast1.firebasedatabase.app",
+                    projectId: "rss-dic",
+                    storageBucket: "rss-dic.firebasestorage.app",
+                    messagingSenderId: "92222806976",
+                    appId: "1:92222806976:web:b2b20f197ddb96987f4625",
+                    measurementId: "G-67PS8HKWLJ"
+                };
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // 【修正ポイント: RULE 3】 認証メソッドの実行完了を先に完了・確約させてから後続の処理に進む
+                let userCredential;
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    userCredential = await signInAnonymously(auth);
+                }
+
+                const user = userCredential.user;
+                if (user) {
+                    userId = user.uid;
+                    document.getElementById("user-badge").classList.remove("hidden");
+                    document.getElementById("user-id-text").textContent = `ID: ${user.uid.substring(0, 8)}...`;
+                    isFirebaseActive = true;
+                    listenToSharedFeeds();
+                }
+            } catch (err) {
+                console.warn("Firebase Setup bypassed or failed. LocalStorage fallback activated.", err);
             }
         }
 
         // Listen to Shared Cloud Feeds
         function listenToSharedFeeds() {
-            if (!isFirebaseActive || !db) return;
+            if (!isFirebaseActive || !db || !auth.currentUser) return; // 認証ガードを追加
 
-            // Strict Rules - Fetch shared collection
+            // 定義ルールに完全合致する安全なコレクションパス
             const sharedColRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_feeds');
             
-            // Real-time synchronization
+            // リアルタイム変更監視
             onSnapshot(sharedColRef, (snapshot) => {
                 sharedFeeds = [];
                 snapshot.forEach(doc => {
@@ -647,7 +662,7 @@
                 });
                 renderAll();
             }, (error) => {
-                console.error("Firestore synchronizing error: ", error);
+                console.warn("Firestore listening restricted. (This is normal in preview if rules are local-only): ", error);
             });
         }
 
@@ -1133,6 +1148,7 @@
             confirmModal.querySelector("div").classList.add("scale-100");
         }
 
+        // Close Confirm Modal
         function closeConfirmModal() {
             deleteTarget = null;
             confirmModal.classList.add("opacity-0", "pointer-events-none");
@@ -1140,6 +1156,7 @@
             confirmModal.querySelector("div").classList.add("scale-95");
         }
 
+        // Execute Delete logic
         async function executeDelete() {
             if (!deleteTarget) return;
 
@@ -1155,7 +1172,7 @@
                 showToast("非公開のカスタムRSSを削除しました");
             } else if (type === 'shared') {
                 // Delete Cloud Shared
-                if (isFirebaseActive && db && docId) {
+                if (isFirebaseActive && db && docId && auth.currentUser) {
                     try {
                         const targetDoc = doc(db, 'artifacts', appId, 'public', 'data', 'shared_feeds', docId);
                         await deleteDoc(targetDoc);
@@ -1163,7 +1180,7 @@
                         showToast("共有RSSフィードを削除しました");
                     } catch (err) {
                         console.error("Cloud delete error:", err);
-                        showToast("削除中にエラーが発生しました。");
+                        showToast("削除中にエラーが発生しました。セキュリティルールを確認してください。");
                     }
                 } else {
                     showToast("データベースへの接続がありません。");
@@ -1173,7 +1190,7 @@
             closeConfirmModal();
         }
 
-        // Copy Text using Legacy/Fallback for iFrame Safety
+        // Copy Text to Clipboard
         function copyToClipboard(text) {
             const tempEl = document.createElement("textarea");
             tempEl.value = text;
@@ -1229,6 +1246,7 @@
                 opmlContent += `\n      <outline type="rss" text="${escapedName}" title="${escapedName}" xmlUrl="${escapedUrl}" htmlUrl="${escapedUrl}"/>`;
             });
 
+            // XMLの末尾タグをクローズ
             opmlContent += `
     </outline>
   </body>
@@ -1335,28 +1353,27 @@
                 };
 
                 if (isShareChecked) {
-                    // Save to Cloud Public Shared
-                    if (isFirebaseActive && db) {
+                    // Cloud Firestore への登録
+                    if (isFirebaseActive && db && auth.currentUser) {
                         try {
                             const publicColRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_feeds');
                             await addDoc(publicColRef, feedDetails);
                             showToast("RSSをみんなに共有（公開投稿）しました！");
                         } catch (err) {
                             console.error("Cloud publish error:", err);
-                            showToast("共有保存中にエラーが発生しました。");
+                            showToast("共有保存中にエラーが発生しました。セキュリティルールをご確認ください。");
                         }
                     } else {
-                        showToast("クラウドデータベースがアクティブではありません。");
+                        showToast("クラウドに接続されていません。");
                         return;
                     }
                 } else {
-                    // Save to Local Private
+                    // Local Private への登録
                     customFeeds.unshift(feedDetails);
                     saveCustomFeeds();
                     showToast("マイRSS（非公開）を登録しました！");
                 }
 
-                // Reset form & notify
                 addFeedForm.reset();
                 renderAll();
             });
