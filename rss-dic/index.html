@@ -48,7 +48,7 @@
                 <!-- User ID Badge -->
                 <div id="user-badge" class="hidden md:flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="max-w-[120px] truncate" id="user-id-text">Connecting...</span>
+                    <span class="max-w-[120px] truncate" id="user-id-text">接続中...</span>
                 </div>
 
                 <!-- Theme Toggle Button -->
@@ -338,7 +338,7 @@
     <!-- Firebase Script with module support -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Official RSS Directory Data
@@ -468,7 +468,7 @@
                 name: "ファミ通.com",
                 category: "it",
                 url: "https://www.famitsu.com/rss/index.xml",
-                description: "最新のゲーム情報、新作レビュー、声優・アニメニュースを提供する日本最大級 ofのゲームメディア。",
+                description: "最新のゲーム情報、新作レビュー、声優・アニメニュースを提供する日本最大級のゲームメディア。",
                 publisher: "KADOKAWA Game Linkage"
             },
 
@@ -559,10 +559,8 @@
         let userId = crypto.randomUUID(); // Temporary Local UUID until Auth completes
         let isFirebaseActive = false;
 
-        // 【修正ポイント】環境が提供する変数 ( __app_id ) が存在する場合はそれを使用。
-        // これにより、Canvasプレビュー上では自動で安全なアプリIDが指定され、エラーを回避します。
-        // 本番環境（__app_idが未定義）に貼り付けたときは、自動で指定の 'rss-directory-app' にフォールバックします。
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'rss-directory-app';
+        // 【本番仕様】ご自身のプロダクション専用のアプリID
+        const appId = 'rss-directory-app';
 
         // DOM Elements
         const cardsContainer = document.getElementById("cards-container");
@@ -602,37 +600,25 @@
 
         // Initialize Firebase
         async function setupFirebase() {
-            // 【修正ポイント】 Canvas環境の自動注入設定(__firebase_config)がある場合はそれを使用。
-            // 無い場合は、ユーザーご提示のFirebase configをフォールバックとして使用。
-            let firebaseConfig;
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                firebaseConfig = JSON.parse(__firebase_config);
-            } else {
-                firebaseConfig = {
-                    apiKey: "AIzaSyCoQq104REp7uUvOKhUPP3M-EfKaY4-X5k",
-                    authDomain: "rss-dic.firebaseapp.com",
-                    databaseURL: "https://rss-dic-default-rtdb.asia-southeast1.firebasedatabase.app",
-                    projectId: "rss-dic",
-                    storageBucket: "rss-dic.firebasestorage.app",
-                    messagingSenderId: "92222806976",
-                    appId: "1:92222806976:web:b2b20f197ddb96987f4625",
-                    measurementId: "G-67PS8HKWLJ"
-                };
-            }
+            // 【本番仕様】お客様のプロジェクト `rss-dic` 専用の設定情報
+            const firebaseConfig = {
+                apiKey: "AIzaSyCoQq104REp7uUvOKhUPP3M-EfKaY4-X5k",
+                authDomain: "rss-dic.firebaseapp.com",
+                databaseURL: "https://rss-dic-default-rtdb.asia-southeast1.firebasedatabase.app",
+                projectId: "rss-dic",
+                storageBucket: "rss-dic.firebasestorage.app",
+                messagingSenderId: "92222806976",
+                appId: "1:92222806976:web:b2b20f197ddb96987f4625",
+                measurementId: "G-67PS8HKWLJ"
+            };
 
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // 【修正ポイント: RULE 3】 認証メソッドの実行完了を先に完了・確約させてから後続の処理に進む
-                let userCredential;
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    userCredential = await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    userCredential = await signInAnonymously(auth);
-                }
-
+                // 匿名ユーザーとしてサインインを完了させる（RULE 3）
+                const userCredential = await signInAnonymously(auth);
                 const user = userCredential.user;
                 if (user) {
                     userId = user.uid;
@@ -642,15 +628,15 @@
                     listenToSharedFeeds();
                 }
             } catch (err) {
-                console.warn("Firebase Setup bypassed or failed. LocalStorage fallback activated.", err);
+                console.warn("Firebase Setup failed. LocalStorage fallback activated.", err);
             }
         }
 
         // Listen to Shared Cloud Feeds
         function listenToSharedFeeds() {
-            if (!isFirebaseActive || !db || !auth.currentUser) return; // 認証ガードを追加
+            if (!isFirebaseActive || !db || !auth.currentUser) return;
 
-            // 定義ルールに完全合致する安全なコレクションパス
+            // 厳格なパス制御ルールに則ったコレクションパス (RULE 1)
             const sharedColRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_feeds');
             
             // リアルタイム変更監視
@@ -664,7 +650,7 @@
                 });
                 renderAll();
             }, (error) => {
-                console.warn("Firestore listening restricted. (This is normal in preview if rules are local-only): ", error);
+                console.error("Firestore synchronizing error (Ensure security rules are deployed): ", error);
             });
         }
 
