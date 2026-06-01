@@ -602,6 +602,8 @@
 
         // Initialize Firebase
         async function setupFirebase() {
+            // 【修正ポイント】 Canvas環境の自動注入設定(__firebase_config)がある場合はそれを使用。
+            // 無い場合は、ユーザーご提示のFirebase configをフォールバックとして使用。
             let firebaseConfig;
             if (typeof __firebase_config !== 'undefined' && __firebase_config) {
                 firebaseConfig = JSON.parse(__firebase_config);
