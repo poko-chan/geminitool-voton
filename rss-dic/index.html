@@ -6,6 +6,12 @@
     <title>News RSS Directory - 主要ニュースサイトRSSリンク集</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS class-based dark mode configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -202,10 +208,10 @@
                 </span>
             </div>
             <div class="flex items-center space-x-2">
-                <button id="select-all-btn" class="text-xs px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-50 dark:hover:bg-slate-700 font-medium transition">
+                <button id="select-all-btn" class="text-xs px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-700 font-medium transition">
                     表示中をすべて選択
                 </button>
-                <button id="clear-selection-btn" class="text-xs px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-50 dark:hover:bg-slate-700 font-medium transition">
+                <button id="clear-selection-btn" class="text-xs px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded hover:bg-slate-700 font-medium transition">
                     選択クリア
                 </button>
                 <button id="export-selected-btn" class="text-xs px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-medium transition flex items-center space-x-1">
@@ -320,10 +326,9 @@
         <div class="max-w-6xl mx-auto px-4 text-center">
             <p class="text-sm text-slate-500 dark:text-slate-400">
                 RSSフィードの配信状況やURLは、配信元の公式サイトの仕様変更により予告なく変更される場合があります。
-                また、開発/運営者への連絡は<a href="mailto:vtn-ad@proton.me">vtn-ad@proton.me</a>まで。
             </p>
             <p class="text-xs text-slate-400 dark:text-slate-600 mt-3">
-                &copy; 2026 Voton RSS Dictionaly. All Rights Reserved.
+                &copy; 2026 RSS Directory. All Rights Reserved.
             </p>
         </div>
     </footer>
@@ -676,6 +681,9 @@
         function isDarkModeActive() {
             return document.documentElement.classList.contains('dark');
         }
+
+        // 【修正ポイント】Tailwind CSS（CDN版）でクラスベースのダークモードを有効化します。
+        // CDN版では tailwind.config に darkMode: 'class' を設定する必要があります。
 
         function updateThemeUI(isDark) {
             if (isDark) {
