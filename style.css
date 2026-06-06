@@ -12,6 +12,11 @@
     box-sizing: border-box;
 }
 
+small.version{
+    font-size: .5rem;
+    color:gray;
+}
+
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
